@@ -20,6 +20,7 @@ const authFormSchema =(type: FormType) => {
         name: type === 'sign-up'? z.string().min(3) : z.string().optional(),
         email:z.string().email(),
         password:z.string().min(3),
+        role: type === 'sign-up' ? z.enum(['admin', 'candidate']) : z.string().optional(),
     })
 }
 
@@ -34,6 +35,7 @@ const AuthForm = ({type}:{type:FormType}) => {
             name: "",
             email:"",
             password:"",
+            role: "candidate" as 'admin' | 'candidate',
         },
     })
 
@@ -41,13 +43,14 @@ const AuthForm = ({type}:{type:FormType}) => {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try{
             if(type === "sign-up"){
-                const{name,email,password}=values;
+                const{name,email,password,role}=values as {name: string, email: string, password: string, role: 'admin' | 'candidate'};
                 const userCredentials = await createUserWithEmailAndPassword(auth,email,password);
                 const result=await signUp({
                     uid:userCredentials.user.uid,
                     name:name!,
                     email,
                     password,
+                    role,
 
                 })
                 if(!result?.success){
@@ -121,6 +124,20 @@ const AuthForm = ({type}:{type:FormType}) => {
                             label="Password"
                             placeholder=" Enter Your Password"
                             type="password"/>
+
+                        {!isSignIn && (
+                            <div className="flex flex-col gap-2">
+                                <label className="text-sm font-medium">Role</label>
+                                <select
+                                    {...form.register("role")}
+                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <option value="candidate">Candidate</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                        )}
+
                         <Button className="btn" type="submit">{isSignIn ? 'Sign in' : 'Create an Account'}</Button>
                     </form>
                 </Form>

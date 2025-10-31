@@ -23,6 +23,7 @@ interface Interview {
   userId: string;
   type: string;
   finalized: boolean;
+  assignedTo?: string;
 }
 
 interface CreateFeedbackParams {
@@ -36,10 +37,11 @@ interface User {
   name: string;
   email: string;
   id: string;
+  role: 'admin' | 'candidate';
 }
 
 interface InterviewCardProps {
-  interviewId?: string;
+  id?: string;
   userId?: string;
   role: string;
   type: string;
@@ -81,6 +83,7 @@ interface SignUpParams {
   name: string;
   email: string;
   password: string;
+  role: 'admin' | 'candidate';
 }
 
 type FormType = "sign-in" | "sign-up";
@@ -95,5 +98,5 @@ interface InterviewFormProps {
 }
 
 interface TechIconProps {
-  techStack: string[];
+  techStack: string | string[];
 }
