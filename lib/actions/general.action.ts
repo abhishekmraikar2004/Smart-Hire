@@ -11,6 +11,8 @@ export async function getInterviewsByUserId(userId:string): Promise<Interview[] 
     const user = await getCurrentUser();
     if (!user) return null;
 
+    if (!db) return null;
+
     let query: any = db.collection('interviews');
 
     if (user.role === 'candidate') {
@@ -38,6 +40,8 @@ export async function getLatestInterviews(params:GetLatestInterviewsParams): Pro
 
     if (!userId) return null;
 
+    if (!db) return null;
+
     const interviews = await db
         .collection('interviews')
         .where('finalized', '==', false)
@@ -52,6 +56,8 @@ export async function getLatestInterviews(params:GetLatestInterviewsParams): Pro
 }
 
 export async function getInterviewById(id:string): Promise<Interview | null> {
+    if (!db) return null;
+
     const interview = await db
         .collection('interviews')
         .doc(id)
@@ -63,7 +69,25 @@ export async function getInterviewById(id:string): Promise<Interview | null> {
 export async function createFeedback(params: CreateFeedbackParams) {
     const { interviewId, userId, transcript, feedbackId } = params;
 
+    if (!db) return { success: false };
+
     try {
+        // Fetch user details
+        const userDoc = await db.collection("users").doc(userId).get();
+        if (!userDoc.exists) {
+            console.error("User not found");
+            return { success: false };
+        }
+        const userData = userDoc.data();
+
+        // Fetch interview details
+        const interviewDoc = await db.collection("interviews").doc(interviewId).get();
+        if (!interviewDoc.exists) {
+            console.error("Interview not found");
+            return { success: false };
+        }
+        const interviewData = interviewDoc.data();
+
         const formattedTranscript = transcript
             .map(
                 (sentence: { role: string; content: string }) =>
@@ -89,11 +113,43 @@ export async function createFeedback(params: CreateFeedbackParams) {
                 "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories",
         });
 
+        // Transform categoryScores from object to array format
+        const categoryScoresArray = [
+            {
+                name: "Communication Skills",
+                score: object.categoryScores.communication.score,
+                comment: object.categoryScores.communication.feedback,
+            },
+            {
+                name: "Technical Knowledge",
+                score: object.categoryScores.technicalKnowledge.score,
+                comment: object.categoryScores.technicalKnowledge.feedback,
+            },
+            {
+                name: "Problem-Solving",
+                score: object.categoryScores.problemSolving.score,
+                comment: object.categoryScores.problemSolving.feedback,
+            },
+            {
+                name: "Cultural & Role Fit",
+                score: object.categoryScores.culturalFit.score,
+                comment: object.categoryScores.culturalFit.feedback,
+            },
+            {
+                name: "Confidence & Clarity",
+                score: object.categoryScores.confidence.score,
+                comment: object.categoryScores.confidence.feedback,
+            },
+        ];
+
         const feedback = {
             interviewId: interviewId,
             userId: userId,
+            candidateName: userData?.name || "Unknown",
+            candidateEmail: userData?.email || "Unknown",
+            interviewRole: interviewData?.role || "Unknown",
             totalScore: object.totalScore,
-            categoryScores: object.categoryScores,
+            categoryScores: categoryScoresArray,
             strengths: object.strengths,
             areasForImprovement: object.areasForImprovement,
             finalAssessment: object.finalAssessment,
@@ -130,6 +186,8 @@ export async function getFeedbackByInterviewId(params:GetFeedbackByInterviewIdPa
     const user = await getCurrentUser();
     if (!user) return null;
 
+    if (!db) return null;
+
     let query = db.collection('feedback').where('interviewId', '==', interviewId);
 
     if (user.role === 'candidate') {
@@ -150,7 +208,35 @@ export async function getFeedbackByInterviewId(params:GetFeedbackByInterviewIdPa
 
 }
 
+export async function getFeedbackByUserId(params: { userId: string }): Promise<Feedback[] | null> {
+    const { userId } = params;
+
+    const user = await getCurrentUser();
+    if (!user) return null;
+
+    if (!db) return null;
+
+    let query = db.collection('feedback').orderBy('createdAt', 'desc');
+
+    if (user.role === 'candidate') {
+        // Candidates can only see their own feedback
+        query = query.where('userId', '==', userId);
+    }
+    // Admins can see all feedback
+
+    const feedback = await query.get();
+
+    if (feedback.empty) return [];
+
+    return feedback.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data()
+    })) as Feedback[];
+}
+
 export async function getAllInterviews(): Promise<Interview[] | null> {
+    if (!db) return null;
+
     const interviews = await db
         .collection('interviews')
         .orderBy('createdAt', 'desc')
@@ -163,6 +249,8 @@ export async function getAllInterviews(): Promise<Interview[] | null> {
 }
 
 export async function getAllFeedback(): Promise<Feedback[] | null> {
+    if (!db) return null;
+
     const feedback = await db
         .collection('feedback')
         .orderBy('createdAt', 'desc')

@@ -1,6 +1,10 @@
 interface Feedback {
   id: string;
   interviewId: string;
+  userId: string;
+  candidateName: string;
+  candidateEmail: string;
+  interviewRole: string;
   totalScore: number;
   categoryScores: Array<{
     name: string;
@@ -86,7 +90,7 @@ interface SignUpParams {
   role: 'admin' | 'candidate';
 }
 
-type FormType = "sign-in" | "sign-up";
+type FormType = "sign-in" | "sign-up" | "admin-sign-in";
 
 interface InterviewFormProps {
   interviewId: string;

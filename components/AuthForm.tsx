@@ -61,7 +61,7 @@ const AuthForm = ({type}:{type:FormType}) => {
                 toast.success('Account created ' + 'successfully.Please Sign in');
                 router.push('/sign-in');
 
-            }else{
+            }else if(type === "sign-in" || type === "admin-sign-in"){
                 const{email,password}=values;
 
                 const userCredential = await signInWithEmailAndPassword(auth,email,password);
@@ -70,11 +70,24 @@ const AuthForm = ({type}:{type:FormType}) => {
                     toast.error('sign in failed');
                     return;
                 }
-                await signIn({
+                const result = await signIn({
                     email,idToken
                 })
+                if(!result?.success){
+                    toast.error(result?.message);
+                    return;
+                }
                 toast.success('Sign in successfully');
-                router.push('/');
+
+                // Redirect based on role returned from signIn
+                if(result.role === "admin"){
+                    router.push('/admin/dashboard');
+                }else if(result.role === "candidate"){
+                    router.push('/candidate/dashboard');
+                }else{
+                    // Fallback if role not found
+                    router.push('/sign-in');
+                }
             }
 
         }catch(error){

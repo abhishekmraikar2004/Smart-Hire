@@ -10,6 +10,14 @@ export async function signUp(params: SignUpParams) {
   const { uid, name, email, role } = params;
 
   try {
+    // Check if Firebase Admin is available
+    if (!db) {
+      return {
+        success: false,
+        message: "Database not available. Please try again later.",
+      };
+    }
+
     const userRef = db.collection("users").doc(uid);
     const userDoc = await userRef.get();
 
@@ -20,7 +28,7 @@ export async function signUp(params: SignUpParams) {
       };
     }
 
-    await userRef.set({ name, email, role });
+    await userRef.set({ name, email, role: role || "candidate" });
 
     return {
       success: true,
@@ -48,6 +56,14 @@ export async function signIn(params: SignInParams) {
   const { email, idToken } = params;
 
   try {
+    // Check if Firebase Admin is available
+    if (!auth || !db) {
+      return {
+        success: false,
+        message: "Authentication service not available. Please try again later.",
+      };
+    }
+
     const userRecord = await auth.getUserByEmail(email);
 
     if (!userRecord) {
@@ -59,9 +75,14 @@ export async function signIn(params: SignInParams) {
 
     await setSessionCookie(idToken);
 
+    // Fetch user role from Firestore
+    const userDoc = await db.collection("users").doc(userRecord.uid).get();
+    const userRole = userDoc.exists ? userDoc.data()?.role : null;
+
     return {
       success: true,
       message: "Signed in successfully.",
+      role: userRole,
     };
   } catch (error) {
     console.error("Sign-in error:", error);
@@ -75,6 +96,12 @@ export async function signIn(params: SignInParams) {
 // ---------------- SET SESSION COOKIE ----------------
 export async function setSessionCookie(idToken: string) {
   const cookieStore = await cookies(); // ✅ Must await cookies()
+
+  // Check if Firebase Admin is available
+  if (!auth) {
+    throw new Error("Authentication service not available");
+  }
+
   const sessionCookie = await auth.createSessionCookie(idToken, {
     expiresIn: ONE_WEEK * 1000,
   });
@@ -96,6 +123,11 @@ export async function getCurrentUser(): Promise<User | null> {
   if (!session) return null;
 
   try {
+    // Check if Firebase Admin is available
+    if (!auth || !db) {
+      return null;
+    }
+
     const decoded = await auth.verifySessionCookie(session, true);
     const userDoc = await db.collection("users").doc(decoded.uid).get();
 
@@ -122,6 +154,11 @@ export async function getInterviewsByUserId(
   userId: string
 ): Promise<Interview[] | null> {
   try {
+    // Check if Firebase Admin is available
+    if (!db) {
+      return null;
+    }
+
     const snapshot = await db
       .collection("interviews")
       .where("userId", "==", userId)
@@ -143,6 +180,11 @@ export async function getLatestInterviewsByUserId(
   params: GetLatestInterviewsParams
 ): Promise<Interview[] | null> {
     try {
+        // Check if Firebase Admin is available
+        if (!db) {
+          return null;
+        }
+
         const { userId, limit = 20 } = params;
     const snapshot = await db
         .collection("interviews")

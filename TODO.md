@@ -1,38 +1,16 @@
-# TODO: Implement Role-Based Access
+# TODO: Enforce Authentication and Role-Based Redirects
 
-## 1. Update Types
+## Tasks
 
-- [x] Add `role: 'admin' | 'candidate'` to User interface in types/index.d.ts
-- [x] Add `assignedTo?: string` to Interview interface in types/index.d.ts
+- [x] Modify `app/(root)/page.tsx` to always redirect to "/sign-in"
+- [x] Update `app/(auth)/layout.tsx` to redirect authenticated users to "/"
+- [x] Update middleware.ts to protect routes and handle role-based access
+- [x] Ensure AuthForm.tsx correctly fetches user role after sign-in and redirects accordingly
+- [ ] Test the flow: visiting "/" goes to sign-in, after sign-in redirects to correct dashboard, direct access to dashboards is blocked without authentication
 
-## 2. Update Authentication Actions
+## Notes
 
-- [x] Modify signUp function in lib/actions/auth.action.ts to accept and store role
-- [x] Update getCurrentUser function to include role in returned User object
-
-## 3. Update Auth Form
-
-- [x] Add role selection (radio buttons) to sign-up form in components/AuthForm.tsx
-- [x] Pass role to signUp action
-
-## 4. Create Dashboard Routes
-
-- [x] Create app/admin/dashboard/page.tsx for admin dashboard
-- [x] Create app/candidate/dashboard/page.tsx for candidate dashboard
-
-## 5. Update Home Page Redirection
-
-- [x] Modify app/(root)/page.tsx to redirect based on user role
-
-## 6. Update General Actions for Role-Based Logic
-
-- [x] Update getInterviewsByUserId in lib/actions/general.action.ts to filter by assignedTo for candidates
-- [x] Update getFeedbackByInterviewId to allow admins view all, restrict candidates to own
-- [x] Add admin functions: getAllInterviews, getAllFeedback
-
-## 7. Testing
-
-- [x] Start the development server successfully with `npx next dev --turbopack`
-- [ ] Test sign-up as admin and candidate
-- [ ] Verify redirections and access controls
-- [ ] Test interview assignments and feedback visibility
+- Root page ("/") must always redirect to "/sign-in", clearing any persistent sessions
+- Authenticated users visiting sign-in pages should be redirected to their dashboard
+- Middleware should protect "/admin/_" and "/candidate/_" routes
+- Sign-in should fetch role from Firestore and redirect based on role
