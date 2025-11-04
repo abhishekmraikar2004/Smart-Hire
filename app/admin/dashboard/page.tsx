@@ -1,92 +1,41 @@
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import InterviewCard from "@/components/InterviewCard";
-import { getCurrentUser } from "@/lib/actions/auth.action";
-import { getAllInterviews, getAllFeedback } from "@/lib/actions/general.action";
+import { db } from "@/firebase/admin";
+import React from "react";
 
 export default async function AdminDashboard() {
-  // Fetch currently logged-in user
-  const user = await getCurrentUser();
-
-  // If user not logged in or not admin → redirect to sign-in
-  if (!user || user.role !== 'admin') {
+  if (!db) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen text-center">
-        <h2 className="text-2xl font-semibold mb-4">Access Denied</h2>
-        <p className="text-gray-600 mb-6">
-          You need to be an admin to access this page.
-        </p>
-        <Button asChild className="btn-primary">
-          <Link href="/sign-in">Go to Sign In</Link>
-        </Button>
+      <div className="p-8">
+        <h1 className="text-2xl font-bold mb-4">All Feedback</h1>
+        <p className="text-gray-500">Database not available.</p>
       </div>
     );
   }
 
-  // Fetch all interviews and feedback for admin
-  const [allInterviews, allFeedback] = await Promise.all([
-    getAllInterviews(),
-    getAllFeedback(),
-  ]);
+  const snapshot = await db
+    .collection("feedbacks")
+    .orderBy("createdAt", "desc")
+    .get();
 
-  const hasInterviews = (allInterviews?.length ?? 0) > 0;
-  const hasFeedback = (allFeedback?.length ?? 0) > 0;
+  const feedbacks = snapshot.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      name: data.candidateName || "Unknown Candidate",
+      score: data.score || 0,
+      feedback: data.feedback || "No feedback available",
+    };
+  });
 
   return (
-    <main className="p-6 md:p-10 flex flex-col gap-10">
-      {/* ---------------- HEADER ---------------- */}
-      <section className="flex flex-col gap-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-          <Button asChild className="btn-primary">
-            <Link href="/admin/create-interview">Create New Interview</Link>
-          </Button>
+    <div className="p-8">
+      <h1 className="text-2xl font-bold mb-4">All Feedback</h1>
+      {feedbacks.map((f) => (
+        <div key={f.id} className="border p-4 rounded-lg mb-3">
+          <h2 className="font-semibold text-lg">{f.name}</h2>
+          <p className="text-gray-700 mt-2">Score: {f.score}</p>
+          <p className="mt-2">{f.feedback}</p>
         </div>
-        <p className="text-lg text-gray-600">
-          Manage interviews, assign to candidates, and view all feedback.
-        </p>
-      </section>
-
-      {/* ---------------- ALL INTERVIEWS ---------------- */}
-      <section className="flex flex-col gap-6">
-        <h2 className="text-2xl font-semibold text-gray-800">All Interviews</h2>
-        <div className="interviews-section grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {hasInterviews ? (
-            allInterviews?.map((interview) => (
-              <InterviewCard
-                key={interview.id}
-                id={interview.id}
-                userId={interview.userId}
-                role={interview.role}
-                type={interview.type}
-                techstack={interview.techstack}
-                createdAt={interview.createdAt}
-              />
-            ))
-          ) : (
-            <p className="text-gray-600">No interviews available.</p>
-          )}
-        </div>
-      </section>
-
-      {/* ---------------- ALL FEEDBACK ---------------- */}
-      <section className="flex flex-col gap-6">
-        <h2 className="text-2xl font-semibold text-gray-800">All Feedback</h2>
-        <div className="feedback-section grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {hasFeedback ? (
-            allFeedback?.map((feedback) => (
-              <div key={feedback.id} className="card p-4">
-                <h3 className="font-semibold">{feedback.interviewId}</h3>
-                <p className="text-sm text-gray-600">Score: {feedback.totalScore}</p>
-                <p className="text-sm">{feedback.finalAssessment}</p>
-              </div>
-            ))
-          ) : (
-            <p className="text-gray-600">No feedback available.</p>
-          )}
-        </div>
-      </section>
-    </main>
+      ))}
+    </div>
   );
 }

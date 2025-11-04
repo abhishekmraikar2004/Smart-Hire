@@ -144,15 +144,10 @@ export async function createFeedback(params: CreateFeedbackParams) {
 
         const feedback = {
             interviewId: interviewId,
-            userId: userId,
+            candidateId: userId,
             candidateName: userData?.name || "Unknown",
-            candidateEmail: userData?.email || "Unknown",
-            interviewRole: interviewData?.role || "Unknown",
-            totalScore: object.totalScore,
-            categoryScores: categoryScoresArray,
-            strengths: object.strengths,
-            areasForImprovement: object.areasForImprovement,
-            finalAssessment: object.finalAssessment,
+            feedback: object.finalAssessment,
+            score: object.totalScore,
             createdAt: new Date().toISOString(),
         };
 

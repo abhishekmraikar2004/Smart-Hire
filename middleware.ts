@@ -4,6 +4,11 @@ import { auth } from "./firebase/admin";
 import { db } from "./firebase/admin";
 
 export async function middleware(req: NextRequest) {
+  // Always redirect root to sign-in
+  if (req.nextUrl.pathname === "/") {
+    return NextResponse.redirect(new URL("/sign-in", req.url));
+  }
+
   const session = req.cookies.get("session")?.value;
 
   // If not logged in → go to sign-in

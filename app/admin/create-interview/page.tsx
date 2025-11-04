@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/actions/auth.action";
+import CreateInterviewForm from "@/components/CreateInterviewForm";
 
 export default async function CreateInterview() {
   // Fetch currently logged-in user
@@ -36,57 +37,9 @@ export default async function CreateInterview() {
         </p>
       </section>
 
-      {/* ---------------- CREATE FORM PLACEHOLDER ---------------- */}
+      {/* ---------------- CREATE FORM ---------------- */}
       <section className="flex flex-col gap-6">
-        <div className="card p-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Interview Details</h2>
-          <p className="text-gray-600 mb-6">
-            This is a placeholder for the interview creation form. In a full implementation,
-            you would have fields for role, level, tech stack, number of questions, etc.
-          </p>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Job Role</label>
-              <input
-                type="text"
-                placeholder="e.g., Frontend Developer"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Experience Level</label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" disabled>
-                <option>Junior</option>
-                <option>Mid-level</option>
-                <option>Senior</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tech Stack</label>
-              <input
-                type="text"
-                placeholder="e.g., React, TypeScript, Node.js"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Number of Questions</label>
-              <input
-                type="number"
-                placeholder="5"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled
-              />
-            </div>
-          </div>
-          <div className="mt-6">
-            <Button className="btn-primary" disabled>
-              Create Interview Set
-            </Button>
-          </div>
-        </div>
+        <CreateInterviewForm user={user} />
       </section>
     </main>
   );
